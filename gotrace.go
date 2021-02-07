@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "flag"
     "golang.org/x/net/icmp"
     "golang.org/x/net/ipv4"
     "log"
@@ -13,7 +14,13 @@ import (
 func main() {
     // Tracing an IP packet route to www.baidu.com.
 
-    const host = "www.baidu.com"
+
+//    const host = "www.baidu.com"
+
+    var host        string
+    flag.StringVar(&host, "H", "www.baidu.com", "默认www.baidu.com")
+    flag.Parse()
+
     ips, err := net.LookupIP(host)
     if err != nil {
         log.Fatal(err)
@@ -89,10 +96,10 @@ func main() {
         switch rm.Type {
         case ipv4.ICMPTypeTimeExceeded:
             names, _ := net.LookupAddr(peer.String())
-            fmt.Printf("%d\t%v %+v %v\n\t%+v\n", i, peer, names, rtt, cm)
+            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
         case ipv4.ICMPTypeEchoReply:
             names, _ := net.LookupAddr(peer.String())
-            fmt.Printf("%d\t%v %+v %v\n\t%+v\n", i, peer, names, rtt, cm)
+            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
             return
         default:
             log.Printf("unknown ICMP message: %+v\n", rm)

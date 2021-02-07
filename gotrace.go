@@ -5,18 +5,51 @@ import (
     "flag"
     "golang.org/x/net/icmp"
     "golang.org/x/net/ipv4"
+    "github.com/oschwald/geoip2-golang"
     "log"
     "net"
     "os"
     "time"
+//    "strconv"
 )
 
+
+func findaddr(ipaddr net.Addr) (country, city string) {
+    db, err := geoip2.Open("./resource/GeoIP2-City.mmdb")
+    if err != nil {
+        log.Panic(err)
+    }
+    defer db.Close()
+    // If you are using strings that may be invalid, check that ip is not nil
+    ip := net.ParseIP(ipaddr.String())
+    record, err := db.City(ip)
+    if err != nil {
+        log.Panic(err)
+    }
+    city = record.City.Names["en"]
+//    if len(record.Subdivisions) > 0 {
+    country = record.Country.IsoCode
+//    }
+    return
+//    fmt.Printf("Russian country name: %v\n", record.Country.Names["en"])
+//    fmt.Printf("ISO country code: %v\n", record.Country.IsoCode)
+//    fmt.Printf("Time zone: %v\n", record.Location.TimeZone)
+//    fmt.Printf("Coordinates: %v, %v\n", record.Location.Latitude, record.Location.Longitude)
+// Output:
+// Portuguese (BR) city name: Londres
+// English subdivision name: England
+// Russian country name: Великобритания
+// ISO country code: GB
+// Time zone: Europe/London
+// Coordinates: 51.5142, -0.0931
+}
+
 func main() {
+
     // Tracing an IP packet route to www.baidu.com.
 
 
 //    const host = "www.baidu.com"
-
     var host        string
     flag.StringVar(&host, "H", "www.baidu.com", "默认www.baidu.com")
     flag.Parse()
@@ -77,10 +110,9 @@ func main() {
             log.Fatal(err)
         }
         n, _, peer, err := p.ReadFrom(rb)
-//        n,  cm, peer, err := p.ReadFrom(rb)
         if err != nil {
             if err, ok := err.(net.Error); ok && err.Timeout() {
-                fmt.Printf("%v\t*\n", i)
+                fmt.Printf("%v\t*\tNULL\n", i)
                 continue
             }
             log.Fatal(err)
@@ -97,12 +129,12 @@ func main() {
         switch rm.Type {
         case ipv4.ICMPTypeTimeExceeded:
             names, _ := net.LookupAddr(peer.String())
-//            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
-            fmt.Printf("%d\t%v %+v %v\t\n", i, peer, names, rtt)
+            fcountry, _ := findaddr(peer)
+            fmt.Printf("%d\t%v %+v %v\t%v\n", i, peer, names, rtt, fcountry)
         case ipv4.ICMPTypeEchoReply:
             names, _ := net.LookupAddr(peer.String())
-//            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
-            fmt.Printf("%d\t%v %+v %v\n", i, peer, names, rtt)
+            fcountry, _ := findaddr(peer)
+            fmt.Printf("%d\t%v %+v %v\t%v\n", i, peer, names, rtt, fcountry)
             return
         default:
             log.Printf("unknown ICMP message: %+v\n", rm)

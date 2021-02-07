@@ -76,7 +76,8 @@ func main() {
         if err := p.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
             log.Fatal(err)
         }
-        n, cm, peer, err := p.ReadFrom(rb)
+        n, _, peer, err := p.ReadFrom(rb)
+//        n,  cm, peer, err := p.ReadFrom(rb)
         if err != nil {
             if err, ok := err.(net.Error); ok && err.Timeout() {
                 fmt.Printf("%v\t*\n", i)
@@ -96,10 +97,12 @@ func main() {
         switch rm.Type {
         case ipv4.ICMPTypeTimeExceeded:
             names, _ := net.LookupAddr(peer.String())
-            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
+//            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
+            fmt.Printf("%d\t%v %+v %v\t\n", i, peer, names, rtt)
         case ipv4.ICMPTypeEchoReply:
             names, _ := net.LookupAddr(peer.String())
-            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
+//            fmt.Printf("%d\t%v %+v %v\t%+v\n", i, peer, names, rtt, cm)
+            fmt.Printf("%d\t%v %+v %v\n", i, peer, names, rtt)
             return
         default:
             log.Printf("unknown ICMP message: %+v\n", rm)

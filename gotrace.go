@@ -14,7 +14,7 @@ import (
 )
 
 
-func findaddr(ipaddr net.Addr) (country string, asn uint) {
+func findaddr(ipaddr net.Addr) (country string, asdesc string, asn uint) {
     db, err := geoip2.Open("./resource/GeoIP2-City.mmdb")
     asndb, err := geoip2.Open("./resource/GeoLite2-ASN.mmdb")
     if err != nil {
@@ -36,6 +36,7 @@ func findaddr(ipaddr net.Addr) (country string, asn uint) {
     }
 
     asn = asrecord.AutonomousSystemNumber
+    asdesc = asrecord.AutonomousSystemOrganization
     country = record.Country.IsoCode
 //    }
     return
@@ -137,12 +138,12 @@ func main() {
         switch rm.Type {
         case ipv4.ICMPTypeTimeExceeded:
             names, _ := net.LookupAddr(peer.String())
-            fcountry, fasn := findaddr(peer)
-	    fmt.Printf("%d\t%v %+v %v\tCountry_code:%v\tAS:%d\n", i, peer, names, rtt, fcountry, fasn)
+            fcountry, fasdesc, fasn := findaddr(peer)
+	    fmt.Printf("%d\t%v %+v %v\tCountry_code:%v\tAS:%d\t%v\n", i, peer, names, rtt, fcountry, fasn, fasdesc)
         case ipv4.ICMPTypeEchoReply:
             names, _ := net.LookupAddr(peer.String())
-            fcountry, fasn := findaddr(peer)
-	    fmt.Printf("%d\t%v %+v %v\tCountry_code:%v\tAS:%d\n", i, peer, names, rtt, fcountry, fasn)
+            fcountry, fasdesc, fasn := findaddr(peer)
+	    fmt.Printf("%d\t%v %+v %v\tCountry_code:%v\tAS:%d\t%v\n", i, peer, names, rtt, fcountry, fasn, fasdesc)
             return
         default:
             log.Printf("unknown ICMP message: %+v\n", rm)

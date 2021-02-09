@@ -6,6 +6,8 @@ import (
     "golang.org/x/net/icmp"
     "golang.org/x/net/ipv4"
     "github.com/oschwald/geoip2-golang"
+    "github.com/timoseven/gotrace/mmdb"
+    "github.com/elazarl/go-bindata-assetfs"
     "log"
     "net"
     "os"
@@ -15,7 +17,22 @@ import (
 
 
 func findaddr(ipaddr net.Addr) (country string, asdesc string, asn uint) {
-    db, err := geoip2.Open("./resource/GeoIP2-City.mmdb")
+    dirs := []string{"resource"} // 设置需要释放的目录
+
+    for _, dir := range dirs {
+        // 解压dir目录到当前目录
+        if err := asset.RestoreAssets("./", dir); err != nil {
+            isSuccess = false
+            break
+        }
+    }
+    if !isSuccess {
+        for _, dir := range dirs {
+            os.RemoveAll(filepath.Join("./", dir))
+        }
+    }
+
+    db, err := geoip2.Open("./resource/GeoLite2-Country.mmdb")
     asndb, err := geoip2.Open("./resource/GeoLite2-ASN.mmdb")
     if err != nil {
         log.Panic(err)
@@ -25,7 +42,7 @@ func findaddr(ipaddr net.Addr) (country string, asdesc string, asn uint) {
     // If you are using strings that may be invalid, check that ip is not nil
     ip := net.ParseIP(ipaddr.String())
 
-    record, err := db.City(ip)
+    record, err := db.Country(ip)
     if err != nil {
         log.Panic(err)
     }
@@ -54,6 +71,20 @@ func findaddr(ipaddr net.Addr) (country string, asdesc string, asn uint) {
 }
 
 func main() {
+    dirs := []string{"resource"} // 设置需要释放的目录
+    
+    for _, dir := range dirs {
+        // 解压dir目录到当前目录
+        if err := asset.RestoreAssets("./", dir); err != nil {
+            isSuccess = false
+            break
+        }
+    }
+    if !isSuccess {
+        for _, dir := range dirs {
+            os.RemoveAll(filepath.Join("./", dir))
+        }
+    }
 
     // Tracing an IP packet route to www.baidu.com.
 
